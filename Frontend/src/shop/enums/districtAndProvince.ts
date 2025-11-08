@@ -1,0 +1,114 @@
+
+
+export enum District {
+    // Province 1
+    TAPLEJUNG = "TAPLEJUNG",
+    PANCHTHAR = "PANCHTHAR",
+    ILAM = "ILAM",
+    JHAPA = "JHAPA",
+    MORANG = "MORANG",
+    SUNSARI = "SUNSARI",
+    DHANKUTA = "DHANKUTA",
+    TERHATHUM = "TERHATHUM",
+    SANKHUWASABHA = "SANKHUWASABHA",
+    BOJHPUR = "BOJHPUR",
+    SOLUKHUMBU = "SOLUKHUMBU",
+    KHOTANG = "KHOTANG",
+    OKHALDHUNGA = "OKHALDHUNGA",
+    UDAYAPUR = "UDAYAPUR",
+  
+    // Madhesh Province
+    SAPTARI = "SAPTARI",
+    SIRAHA = "SIRAHA",
+    DHANUSA = "DHANUSA",
+    MAHOTTARI = "MAHOTTARI",
+    SARLAHI = "SARLAHI",
+    BARA = "BARA",
+    PARSA = "PARSA",
+    RAUTAHAT = "RAUTAHAT",
+  
+    // Bagmati Province
+    SINDHULI = "SINDHULI",
+    RAMECHHAP = "RAMECHHAP",
+    DOLAKHA = "DOLAKHA",
+    SINDHUPALCHOK = "SINDHUPALCHOK",
+    KAVREPALANCHOK = "KAVREPALANCHOK",
+    LALITPUR = "LALITPUR",
+    BHAKTAPUR = "BHAKTAPUR",
+    KATHMANDU = "KATHMANDU",
+    NUWAKOT = "NUWAKOT",
+    RASUWA = "RASUWA",
+    DHADING = "DHADING",
+    MAKAWANPUR = "MAKAWANPUR",
+    CHITWAN = "CHITWAN",
+  
+    // Gandaki Province
+    GORKHA = "GORKHA",
+    LAMJUNG = "LAMJUNG",
+    TANAHU = "TANAHU",
+    SYANGJA = "SYANGJA",
+    KASKI = "KASKI",
+    MANANG = "MANANG",
+    MUSTANG = "MUSTANG",
+    MYAGDI = "MYAGDI",
+    PARBAT = "PARBAT",
+    BAGLUNG = "BAGLUNG",
+    NAWALPUR = "NAWALPUR",
+  
+    // Lumbini Province
+    NAWALPARASI = "NAWALPARASI",
+    RUPANDEHI = "RUPANDEHI",
+    KAPILVASTU = "KAPILVASTU",
+    ARGHAKHANCHI = "ARGHAKHANCHI",
+    GULMI = "GULMI",
+    PALPA = "PALPA",
+    PARASI = "PARASI",
+    ROLPA = "ROLPA",
+    PYUTHAN = "PYUTHAN",
+    DANG = "DANG",
+    BANKA = "BANKA",
+    BARDIYA = "BARDIYA",
+  
+    // Karnali Province
+    DOLPA = "DOLPA",
+    HUMLA = "HUMLA",
+    MUGU = "MUGU",
+    KALIKOT = "KALIKOT",
+    JUMLA = "JUMLA",
+    DAILEKH = "DAILEKH",
+    JAJARKOT = "JAJARKOT",
+    RUKUM_EAST = "RUKUM_EAST",
+    SURKHET = "SURKHET",
+    SALYAN = "SALYAN",
+  
+    // Sudurpashchim Province
+    BAJURA = "BAJURA",
+    BAJHANG = "BAJHANG",
+    DOTI = "DOTI",
+    ACHHAM = "ACHHAM",
+    KAILALI = "KAILALI",
+    KANCHANPUR = "KANCHANPUR",
+    DADHELDHURA = "DADHELDHURA",
+    BAITADI = "BAITADI",
+    DARCHULA = "DARCHULA",
+  }
+
+  export enum Province {
+    PROVINCE_1 = "PROVINCE_1",
+    MADHESH_PROVINCE = "MADHESH_PROVINCE",
+    BAGMATI_PROVINCE = "BAGMATI_PROVINCE",
+    GANDAKI_PROVINCE = "GANDAKI_PROVINCE",
+    LUMBINI_PROVINCE = "LUMBINI_PROVINCE",
+    KARNALI_PROVINCE = "KARNALI_PROVINCE",
+    SUDURPASHCHIM_PROVINCE = "SUDURPASHCHIM_PROVINCE",
+  }
+
+  export const PROVINCE_TO_DISTRICTS: Record<Province, District[]> = {
+    [Province.PROVINCE_1]: [District.TAPLEJUNG, District.PANCHTHAR, District.ILAM, District.JHAPA, District.MORANG, District.SUNSARI, District.DHANKUTA, District.TERHATHUM, District.SANKHUWASABHA, District.BOJHPUR, District.SOLUKHUMBU, District.KHOTANG, District.OKHALDHUNGA, District.UDAYAPUR],
+    [Province.MADHESH_PROVINCE]: [District.SAPTARI, District.SIRAHA, District.DHANUSA, District.MAHOTTARI, District.SARLAHI, District.BARA, District.PARSA, District.RAUTAHAT],
+    [Province.BAGMATI_PROVINCE]: [District.SINDHULI, District.RAMECHHAP, District.DOLAKHA, District.SINDHUPALCHOK, District.KAVREPALANCHOK, District.LALITPUR, District.BHAKTAPUR, District.KATHMANDU, District.NUWAKOT, District.RASUWA, District.DHADING, District.MAKAWANPUR, District.CHITWAN],
+    [Province.GANDAKI_PROVINCE]: [District.GORKHA, District.LAMJUNG, District.TANAHU, District.SYANGJA, District.KASKI, District.MANANG, District.MUSTANG, District.MYAGDI, District.PARBAT, District.BAGLUNG, District.NAWALPUR],
+    [Province.LUMBINI_PROVINCE]: [District.NAWALPARASI, District.RUPANDEHI, District.KAPILVASTU, District.ARGHAKHANCHI, District.GULMI, District.PALPA, District.PARASI, District.ROLPA, District.PYUTHAN, District.DANG, District.BANKA, District.BARDIYA],
+    [Province.KARNALI_PROVINCE]: [District.DOLPA, District.HUMLA, District.MUGU, District.KALIKOT, District.JUMLA, District.DAILEKH, District.JAJARKOT, District.RUKUM_EAST, District.SURKHET, District.SALYAN],
+    [Province.SUDURPASHCHIM_PROVINCE]: [District.BAJURA, District.BAJHANG, District.DOTI, District.ACHHAM, District.KAILALI, District.KANCHANPUR, District.DADHELDHURA, District.BAITADI, District.DARCHULA],
+  };

@@ -1,0 +1,73 @@
+# ------------------------------
+# General system files
+# ------------------------------
+.DS_Store
+Thumbs.db
+.idea
+.vscode
+*.iml
+*.class
+*.log
+
+# ------------------------------
+# Build output
+# ------------------------------
+target/
+build/
+out/
+dist/
+
+# ------------------------------
+# Dependency caches
+# ------------------------------
+.gradle/
+.mvn/
+node_modules/
+
+# ------------------------------
+# Environment and config files
+# ------------------------------
+.env
+*.env
+*.properties.local
+*.yml.local
+*.yaml.local
+
+# ------------------------------
+# Git and CI files
+# ------------------------------
+.git
+.gitignore
+.gitattributes
+.github/
+.gitlab/
+.gitlab-ci.yml
+
+# ------------------------------
+# Docker-related
+# ------------------------------
+Dockerfile
+docker-compose.yml
+docker-compose*.yml
+.dockerignore
+
+# ------------------------------
+# Test and documentation
+# ------------------------------
+test/
+tests/
+*.md
+README.md
+docs/
+documentation/
+
+# ------------------------------
+# OS / temp files
+# ------------------------------
+*.tmp
+*.swp
+*.bak
+*.old
+*.orig
+*.rej
+*.tar.gz*
