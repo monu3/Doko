@@ -1,0 +1,119 @@
+# ==========================================
+# 🧩 Common system / editor files
+# ==========================================
+.DS_Store
+Thumbs.db
+*.iml
+*.log
+*.tmp
+*.swp
+*.bak
+*.old
+*.orig
+*.rej
+
+# IDEs / Editors
+.idea/
+.vscode/
+*.code-workspace
+
+# ==========================================
+# ⚙️ Java / Spring Boot
+# ==========================================
+target/
+build/
+out/
+dist/
+.classpath
+.project
+.settings/
+.mvn/
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Package files
+*.jar
+*.war
+*.ear
+
+# ==========================================
+# ⚛️ React / Node.js
+# ==========================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+*.tsbuildinfo
+
+# React build output
+frontend/build/
+frontend/dist/
+frontend/.next/
+frontend/.cache/
+client/build/
+client/dist/
+client/.next/
+client/.cache/
+
+# Lock files (optional — include only if you use one)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# ==========================================
+# 🔐 Environment & config files
+# ==========================================
+.env
+.env.*
+*.env.local
+*.env.development
+*.env.production
+*.env.test
+*.properties.local
+*.yml.local
+*.yaml.local
+
+# ==========================================
+# 🧪 Tests & documentation
+# ==========================================
+test/
+tests/
+__tests__/
+coverage/
+*.md
+README.md
+docs/
+documentation/
+
+# ==========================================
+# 🧰 Version control / CI artifacts
+# ==========================================
+.gitlab/
+.github/
+.gitlab-ci.yml
+
+# ==========================================
+# 🐳 Docker
+# ==========================================
+docker-compose.yml
+docker-compose*.yml
+Dockerfile
+Dockerfile.*
+.dockerignore
+
+# ==========================================
+# 🧹 OS / Archives / Misc
+# ==========================================
+*.tar
+*.tar.gz
+*.zip
+*.7z
+
+# ==========================================
+# 🧑‍💻 Local dev scripts / configs
+# ==========================================
+scripts/local/
+scripts/dev/
+frontend/.eslintcache
+client/.eslintcache
