@@ -1,6 +1,7 @@
 package org.com.meropasal.meropasalbackend.payment.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.com.meropasal.meropasalbackend.payment.dto.InitiateResponse;
 import org.com.meropasal.meropasalbackend.payment.enums.PaymentMethod;
 import org.com.meropasal.meropasalbackend.payment.service.PaymentService;
 import org.springframework.http.ResponseEntity;

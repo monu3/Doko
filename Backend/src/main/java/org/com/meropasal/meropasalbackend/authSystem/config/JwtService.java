@@ -1,34 +1,19 @@
 package org.com.meropasal.meropasalbackend.authSystem.config;
 
-/**
- * Created On : 2025 26 Jan 11:58 AM
- * Author : Monu Siddiki
- * Description :
- **/
-
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.com.meropasal.meropasalbackend.authSystem.repo.UsersRepository;
 import org.com.meropasal.meropasalbackend.authSystem.service.CustomUserDetailsService;
-import org.com.meropasal.meropasalbackend.shop.repo.ShopRepository;
-import org.com.meropasal.meropasalbackend.shop.service.ShopService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
-import java.security.NoSuchAlgorithmException;
-import org.springframework.security.core.GrantedAuthority;
-import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Service
 public class JwtService {
