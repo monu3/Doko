@@ -46,43 +46,68 @@ public class PaymentService {
         p.setAmountMinor(amountMinor);
         p.setGatewayRequestId(res.gatewayRequestId());
         p.setStatus(PaymentStatus.INITIATED);
+        p.setReturnUrl(returnUrl);
+        p.setFailureUrl(failureUrl);
         repo.save(p);
 
         return res;
     }
 
     @Transactional
-    public void handleEsewaSuccess(String transactionUuid, String transactionCode, String amount) {
-        // Find payment by gateway request ID (transaction_uuid)
+    public Payment handleEsewaSuccess(String transactionUuid, String transactionCode, String amount) {
+        log.info("Looking for payment with gatewayRequestId: {}", transactionUuid);
+
         Optional<Payment> paymentOpt = repo.findByGatewayRequestId(transactionUuid);
 
         if (paymentOpt.isPresent()) {
             Payment payment = paymentOpt.get();
-            payment.setStatus(PaymentStatus.COMPLETED);
-            payment.setGatewayTxnId(transactionCode);
-            payment.setRawCallbackJson("Success data received");
-            repo.save(payment);
 
-            log.info("Payment marked as completed for transaction: {}", transactionCode);
+            // Only update if not already completed
+            if (payment.getStatus() != PaymentStatus.COMPLETED) {
+                payment.setStatus(PaymentStatus.COMPLETED);
+                payment.setGatewayTxnId(transactionCode);
+                payment.setRawCallbackJson("Success data received");
+                Payment savedPayment = repo.save(payment);
+
+                log.info("Payment marked as COMPLETED for transaction: {}, orderId: {}",
+                        transactionCode, payment.getOrderId());
+                return savedPayment;
+            } else {
+                log.info("Payment already completed for transaction: {}", transactionCode);
+                return payment;
+            }
         } else {
+            // Try to find by transaction code if not found by UUID
+            paymentOpt = repo.findByGatewayTxnId(transactionCode);
+            if (paymentOpt.isPresent()) {
+                Payment payment = paymentOpt.get();
+                payment.setStatus(PaymentStatus.COMPLETED);
+                payment.setGatewayTxnId(transactionCode);
+                Payment savedPayment = repo.save(payment);
+                log.info("Payment found by transaction code and marked as COMPLETED: {}", transactionCode);
+                return savedPayment;
+            }
+
             log.warn("Payment not found for transaction UUID: {}", transactionUuid);
+            throw new RuntimeException("Payment not found for transaction UUID: " + transactionUuid);
         }
     }
 
     @Transactional
-    public void handleEsewaFailure(String transactionUuid, String rawData) {
-        // Find payment by gateway request ID (transaction_uuid)
+    public Payment handleEsewaFailure(String transactionUuid, String rawData) {
         Optional<Payment> paymentOpt = repo.findByGatewayRequestId(transactionUuid);
 
         if (paymentOpt.isPresent()) {
             Payment payment = paymentOpt.get();
             payment.setStatus(PaymentStatus.FAILED);
-            payment.setRawCallbackJson(rawData); // Store raw failure payload for debugging/auditing
-            repo.save(payment);
+            payment.setRawCallbackJson(rawData);
+            Payment savedPayment = repo.save(payment);
 
             log.info("Payment marked as FAILED for transaction UUID: {}", transactionUuid);
+            return savedPayment;
         } else {
             log.warn("Payment not found for transaction UUID (failure): {}", transactionUuid);
+            throw new RuntimeException("Payment not found for transaction UUID: " + transactionUuid);
         }
     }
 

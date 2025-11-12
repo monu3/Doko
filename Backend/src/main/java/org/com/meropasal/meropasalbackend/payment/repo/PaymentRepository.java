@@ -22,4 +22,5 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
     List<Payment> findByStatus(PaymentStatus status);
 
     Optional<Payment> findByGatewayRequestId(String transactionUuid);
+    Optional<Payment> findByGatewayTxnId(String gatewayTxnId);
 }

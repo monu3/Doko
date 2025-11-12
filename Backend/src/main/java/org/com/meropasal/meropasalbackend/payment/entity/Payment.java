@@ -67,6 +67,12 @@ public class Payment {
     @Lob
     private String rawCallbackJson;
 
+    @Column(name = "return_url")
+    private String returnUrl;
+
+    @Column(name = "failure_url")
+    private String failureUrl;
+
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
