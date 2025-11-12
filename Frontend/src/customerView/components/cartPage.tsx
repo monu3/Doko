@@ -59,6 +59,48 @@ const CustomerCartPage: React.FC<CustomerCartPageProps> = ({ onBack }) => {
     }
   }, [isAuthenticated, fetchCart]);
 
+  // Check for payment status in URL and automatically show checkout if returning from payment
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get("paymentStatus");
+    const orderId = urlParams.get("orderId");
+
+    if (paymentStatus && orderId) {
+      // Check if we have order data in localStorage
+      const savedOrderData = localStorage.getItem("checkout_orderData");
+      if (savedOrderData) {
+        try {
+          const parsedOrderData = JSON.parse(savedOrderData);
+          // If order IDs match, show checkout flow with confirmation
+          if (parsedOrderData.orderId === orderId) {
+            // Update payment status
+            parsedOrderData.paymentStatus =
+              paymentStatus === "success" ? "COMPLETED" : "FAILED";
+            localStorage.setItem(
+              "checkout_orderData",
+              JSON.stringify(parsedOrderData)
+            );
+
+            // Show checkout with the shop data from order
+            if (parsedOrderData.items && parsedOrderData.items.length > 0) {
+              const firstItem = parsedOrderData.items[0];
+              setCheckoutShopData({
+                shopId: firstItem.shopId,
+                shopItems: parsedOrderData.items,
+              });
+              setShowCheckout(true);
+            }
+          }
+        } catch (error) {
+          console.error("Error handling payment return:", error);
+        }
+      }
+
+      // Clean up URL
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
+
   // Calculate subtotal for each shop
   const calculateShopSubtotal = (shopItems: CartItem[]) => {
     return shopItems.reduce((sum, item) => sum + item.totalPrice, 0);
@@ -233,9 +275,11 @@ const CustomerCartPage: React.FC<CustomerCartPageProps> = ({ onBack }) => {
         shopData={checkoutShopData}
         onBack={handleBackFromCheckout}
         onOrderComplete={() => {
+          // Clear cart after successful order completion
+          // This ensures the cart is cleared only after user confirms
           setShowCheckout(false);
           setCheckoutShopData(null);
-          // Refresh cart after successful order
+          // Refresh cart after successful order (will be empty now)
           fetchCart();
         }}
       />

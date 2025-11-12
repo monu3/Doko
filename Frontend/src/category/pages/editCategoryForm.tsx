@@ -8,7 +8,7 @@ import { CategoryInformation } from "../components/addCategory/categoryInformati
 import { CategoryBanner } from "../components/addCategory/categoryBanner";
 import { CategoryContent } from "../components/addCategory/categoryContent";
 import { useNavigate, useParams } from "react-router-dom";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -66,13 +66,13 @@ export default function EditCategoryPage() {
   // Simple handleSubmit - send all form data
   const handleSubmit = async () => {
     if (!formData.name?.trim()) {
-      toast.error("Please fill in all required fields");
+      toast.error("Please fill in all required fields", { autoClose: 2000 });
       setCurrentSection("information");
       return;
     }
 
     if (!id) {
-      toast.error("Category ID is missing");
+      toast.error("Category ID is missing", { autoClose: 2000 });
       return;
     }
 
@@ -81,10 +81,12 @@ export default function EditCategoryPage() {
 
       // Simply send all form data without checking for changes
       await editCategory(id, formData).unwrap();
-      toast.success("Category updated successfully");
+      toast.success("Category updated successfully", { autoClose: 2000 });
       navigate("/products/categories");
     } catch (error: any) {
-      toast.error(error.message || "Failed to update category");
+      toast.error(error.message || "Failed to update category", {
+        autoClose: 2000,
+      });
     } finally {
       setIsSubmitting(false);
     }

@@ -115,10 +115,10 @@ export default function ProductsPage() {
       await Promise.all(
         selectedProducts.map((id) => dispatch(deleteProduct(id)))
       );
-      toast.success("Products deleted successfully");
+      toast.success("Products deleted successfully", { autoClose: 2000 });
       setSelectedProducts([]);
     } catch (error) {
-      toast.error("Failed to delete products");
+      toast.error("Failed to delete products", { autoClose: 2000 });
     }
   };
 
@@ -126,9 +126,9 @@ export default function ProductsPage() {
   const handleDeleteProduct = async (id: string) => {
     try {
       await dispatch(deleteProduct(id));
-      toast.success("Product deleted successfully");
+      toast.success("Product deleted successfully", { autoClose: 2000 });
     } catch (error) {
-      toast.error("Failed to delete product");
+      toast.error("Failed to delete product", { autoClose: 2000 });
     }
   };
 
@@ -152,10 +152,11 @@ export default function ProductsPage() {
     try {
       await dispatch(updateProductStatus({ id, active })).unwrap();
       toast.success(
-        `Product ${active ? "activated" : "deactivated"} successfully`
+        `Product ${active ? "activated" : "deactivated"} successfully`,
+        { autoClose: 2000 }
       );
     } catch (error) {
-      toast.error("Failed to update product status");
+      toast.error("Failed to update product status", { autoClose: 2000 });
     }
   };
 

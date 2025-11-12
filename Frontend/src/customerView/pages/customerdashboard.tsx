@@ -4,7 +4,7 @@ import CustomerFooter from "../components/customerFooter";
 import CustomerHeader from "../components/customerHeader";
 import CustomerHero from "../components/customerHero";
 import ShopGalleryPage from "../components/shopGalleryPage";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 // import CartSidebar from "../components/cartSidebar";
 import CustomerCartPage from "../components/cartPage";
 
@@ -14,6 +14,22 @@ export default function CustomerDashboard() {
   const [currentView, setCurrentView] = useState<
     "home" | "cart" | "product-detail"
   >("home");
+
+  // Check for payment status in URL and show cart if returning from payment
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get("paymentStatus");
+    const orderId = urlParams.get("orderId");
+
+    if (paymentStatus && orderId) {
+      // User is returning from payment gateway - show cart which will show checkout confirmation
+      console.log("Payment return detected, showing cart view");
+      setCurrentView("cart");
+
+      // Clean up URL
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
 
   const handleSignupRequired = () => {
     setSignupDialogOpen(true);

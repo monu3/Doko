@@ -23,13 +23,7 @@ import {
 } from "@/setting/slice/paymentSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { PaymentEditDialog } from "./PaymentEditDialog";
-
-interface PaymentSettings {
-  paymentMethods: string[];
-  currency: string;
-  taxRate: number;
-  processingFee: number;
-}
+import { toast } from "react-toastify";
 
 interface PaymentMethod {
   id: string;
@@ -42,16 +36,7 @@ interface PaymentMethod {
 export function PaymentsForm() {
   const dispatch = useAppDispatch();
   const shopId = useAppSelector((state: RootState) => state.shop.shop?.id);
-  const { configs,  } = useAppSelector(
-    (state: RootState) => state.payment
-  );
-
-  const [settings] = useState<PaymentSettings>({
-    paymentMethods: ["COD"],
-    currency: "NPR",
-    taxRate: 13,
-    processingFee: 2.5,
-  });
+  const { configs } = useAppSelector((state: RootState) => state.payment);
 
   const [editDialog, setEditDialog] = useState({
     open: false,
@@ -98,7 +83,7 @@ export function PaymentsForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Payment settings updated:", settings);
+    toast.success("Payment settings saved successfully.", { autoClose: 2000 });
     // TODO: Save general payment settings to backend
   };
 
@@ -112,12 +97,31 @@ export function PaymentsForm() {
 
   const handleSetupClick = (methodId: string) => {
     dispatch(openSetupDialog(methodId));
+    toast.info(`Setting up ${getMethodLabel(methodId)} payment method...`, {
+      autoClose: 2000,
+    });
   };
 
   const handleToggleActive = async (configId: string) => {
     const config = getConfigForMethodById(configId);
     if (config) {
-      dispatch(togglePaymentConfigActive(configId));
+      try {
+        await dispatch(togglePaymentConfigActive(configId)).unwrap();
+        const methodLabel = getMethodLabel(config.paymentMethod);
+        const newStatus = !config.active;
+
+        if (newStatus) {
+          toast.success(
+            `✅ ${methodLabel} payment method activated successfully!`
+          );
+        } else {
+          toast.warning(`⏸️ ${methodLabel} payment method deactivated`);
+        }
+      } catch (error) {
+        toast.error("Failed to update payment method status", {
+          autoClose: 2000,
+        });
+      }
     }
   };
 
@@ -133,13 +137,21 @@ export function PaymentsForm() {
         getPaymentConfigDetail({ shopId, paymentMethod: methodId })
       ).unwrap();
       setEditDialog({ open: true, methodId });
+      toast.info(`Editing ${getMethodLabel(methodId)} configuration...`);
     } catch (error) {
-      console.error("Failed to fetch config details:", error);
+      toast.error("Failed to load payment configuration details", {
+        autoClose: 2000,
+      });
     }
   };
 
   const handleCloseEditDialog = () => {
     setEditDialog({ open: false, methodId: "" });
+  };
+
+  const getMethodLabel = (methodId: string): string => {
+    const method = paymentMethods.find((m) => m.id === methodId);
+    return method?.label || methodId;
   };
 
   const renderPaymentMethodCard = (method: PaymentMethod) => {

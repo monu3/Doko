@@ -16,6 +16,7 @@ import { useCustomerAuth } from "@/hooks/useCustomer";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useCart } from "@/hooks/useCart";
 import type { WishlistItem } from "@/customerView/slice/wishlistSlice";
+import { toast } from "react-toastify";
 
 interface WishlistSidebarProps {
   onProductClick?: (product: any) => void;
@@ -60,9 +61,13 @@ const WishlistSidebar = ({
     try {
       await removeItem(productId).unwrap();
       // Refresh wishlist after removal
+      toast.success("Item removed from wishlist", { autoClose: 2000 });
       fetchItems();
     } catch (error) {
       console.error("Failed to remove from wishlist:", error);
+      toast.error("Failed to remove item from wishlist. Please try again.", {
+        autoClose: 2000,
+      });
     }
   };
 
@@ -71,9 +76,13 @@ const WishlistSidebar = ({
     try {
       await clearAllItems().unwrap();
       // Refresh wishlist after clearing
+      toast.success("Wishlist cleared successfully", { autoClose: 2000 });
       fetchItems();
     } catch (error) {
       console.error("Failed to clear wishlist:", error);
+      toast.error("Failed to clear wishlist. Please try again.", {
+        autoClose: 2000,
+      });
     } finally {
       setClearingWishlist(false);
     }
@@ -84,8 +93,6 @@ const WishlistSidebar = ({
   };
 
   const handleProductClick = (item: WishlistItem) => {
-    console.log("Wishlist item clicked:", item);
-
     if (onProductClick) {
       // Enhanced product format conversion with more complete data
       const product = {
@@ -106,8 +113,6 @@ const WishlistSidebar = ({
         brandName: item.brandName,
         discountPercentage: item.discountPercentage,
       };
-
-      console.log("Converted product for navigation:", product);
       onProductClick(product);
       handleClose(); // Close wishlist sidebar
     }
@@ -122,10 +127,14 @@ const WishlistSidebar = ({
         quantity: 1,
       }).unwrap();
 
+      toast.success("Item added to cart", { autoClose: 2000 });
       // Refresh cart after adding
       fetchCartItems();
     } catch (error) {
       console.error("Failed to add to cart:", error);
+      toast.error("Failed to add item to cart. Please try again.", {
+        autoClose: 2000,
+      });
     }
   };
 
@@ -141,10 +150,14 @@ const WishlistSidebar = ({
         }).unwrap();
       }
 
+      toast.success("All items added to cart", { autoClose: 2000 });
       // Refresh cart after adding all items
       fetchCartItems();
     } catch (error) {
       console.error("Failed to add all items to cart:", error);
+      toast.error("Failed to add all items to cart. Please try again.", {
+        autoClose: 2000,
+      });
     } finally {
       setAddingAllToCart(false);
     }

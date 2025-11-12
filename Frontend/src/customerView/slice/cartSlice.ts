@@ -54,11 +54,29 @@ export const initiatePayment = createAsyncThunk(
         { headers }
       );
 
-      // The backend returns HTML as a string
-      const htmlResponse = response.data;
+      // The backend returns JSON with formUrl and fields
+      const responseData = response.data as {
+        formUrl: string;
+        fields: {
+          amount: string;
+          tax_amount: string;
+          total_amount: string;
+          transaction_uuid: string;
+          product_code: string;
+          product_service_charge: string;
+          product_delivery_charge: string;
+          success_url: string;
+          failure_url: string;
+          signed_field_names: string;
+          signature: string;
+        };
+        gatewayRequestId: string;
+      };
 
       return {
-        redirectHtml: htmlResponse,
+        formUrl: responseData.formUrl,
+        fields: responseData.fields,
+        gatewayRequestId: responseData.gatewayRequestId,
         paymentMethod: data.paymentMethod,
         orderId: data.orderId,
       };
@@ -401,6 +419,7 @@ const initialState: CartState = {
   paymentLoading: false,
   paymentError: null,
   paymentRedirectHtml: null,
+  paymentFormData: null,
 };
 // Slice
 const cartSlice = createSlice({
@@ -589,12 +608,9 @@ const cartSlice = createSlice({
       .addCase(placeOrder.fulfilled, (state, action) => {
         state.orderLoading = false;
         state.lastOrder = action.payload ?? null;
-        state.items = [];
-        state.itemsByShop = {};
-        state.summary = {
-          totalItems: 0,
-          totalAmount: 0,
-        };
+        // DON'T clear cart immediately - let the checkout flow handle it
+        // The cart will be cleared when the user completes the checkout flow
+        // This prevents the component from unmounting during order creation
       })
       .addCase(placeOrder.rejected, (state, action) => {
         state.orderLoading = false;
@@ -605,20 +621,19 @@ const cartSlice = createSlice({
         state.paymentLoading = true;
         state.paymentError = null;
         state.paymentRedirectHtml = null;
+        state.paymentFormData = null;
       })
       .addCase(initiatePayment.fulfilled, (state, action) => {
         state.paymentLoading = false;
-        if (
-          typeof action.payload === "object" &&
-          action.payload &&
-          "redirectHtml" in action.payload
-        ) {
-          state.paymentRedirectHtml = action.payload.redirectHtml as string;
+        if (action.payload && typeof action.payload === "object") {
+          // Store the payment form data
+          state.paymentFormData = action.payload as any;
         }
       })
       .addCase(initiatePayment.rejected, (state, action) => {
         state.paymentLoading = false;
         state.paymentError = action.payload as string;
+        state.paymentFormData = null;
       });
   },
 });

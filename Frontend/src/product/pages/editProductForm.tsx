@@ -81,7 +81,7 @@ export default function EditProductPage() {
   useEffect(() => {
     if (status === "succeeded" && isSubmitting) {
       // Show success message
-      toast.success("Product updated successfully");
+      toast.success("Product updated successfully", { autoClose: 2000 });
 
       // Reset states
       setIsSubmitting(false);
@@ -92,7 +92,7 @@ export default function EditProductPage() {
     }
 
     if (status === "failed" && isSubmitting) {
-      toast.error(error || "Failed to update product");
+      toast.error(error || "Failed to update product", { autoClose: 2000 });
       setIsSubmitting(false);
     }
   }, [status, error, isSubmitting, navigate, dispatch]);
@@ -104,7 +104,7 @@ export default function EditProductPage() {
 
   const handleSubmit = async () => {
     if (!id) {
-      toast.error("Product ID is missing");
+      toast.error("Product ID is missing", { autoClose: 2000 });
       return;
     }
 
@@ -114,13 +114,15 @@ export default function EditProductPage() {
       formData.stock == null ||
       formData.price == null
     ) {
-      toast.error("Please fill in all required fields");
+      toast.error("Please fill in all required fields", { autoClose: 2000 });
       setCurrentSection("product-information");
       return;
     }
 
     if (!formData.images || formData.images.length === 0) {
-      toast.error("Please upload at least one product image");
+      toast.error("Please upload at least one product image", {
+        autoClose: 2000,
+      });
       setCurrentSection("product-media");
       return;
     }
@@ -133,7 +135,7 @@ export default function EditProductPage() {
 
       // Navigation will be handled by the useEffect above
     } catch (error: any) {
-      toast.error(error || "Failed to update product");
+      toast.error(error || "Failed to update product", { autoClose: 2000 });
       setIsSubmitting(false);
     }
   };

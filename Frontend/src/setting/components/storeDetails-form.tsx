@@ -54,7 +54,7 @@ export function StoreDetailsForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!shop?.id) {
-      toast.error("Shop ID is required");
+      toast.error("Shop ID is required", { autoClose: 2000 });
       return;
     }
 
@@ -69,24 +69,28 @@ export function StoreDetailsForm() {
           },
         })
       ).unwrap();
-      toast.success("Store details updated successfully!");
+      toast.success("Store details updated successfully!", { autoClose: 2000 });
     } catch (error) {
-      toast.error("Failed to update store details. Please try again.");
+      toast.error("Failed to update store details. Please try again.", {
+        autoClose: 2000,
+      });
     }
   };
 
   // Updated image upload logic using Cloudinary
   const handleLogoUpload = (file: File) => {
     setIsUploadingLogo(true);
-    dispatch(uploadImage({file}))
+    dispatch(uploadImage({ file }))
       .unwrap()
       .then((url) => {
         setFormData((prev) => ({ ...prev, logoUrl: url }));
-        toast.success("Logo uploaded successfully!");
+        toast.success("Logo uploaded successfully!", { autoClose: 2000 });
       })
       .catch((error) => {
         console.error("Logo upload failed:", error);
-        toast.error("Failed to upload logo. Please try again.");
+        toast.error("Failed to upload logo. Please try again.", {
+          autoClose: 2000,
+        });
       })
       .finally(() => {
         setIsUploadingLogo(false);
@@ -95,7 +99,7 @@ export function StoreDetailsForm() {
 
   const removeLogo = () => {
     setFormData((prev) => ({ ...prev, logoUrl: "" }));
-    toast.info("Store logo has been removed.");
+    toast.info("Store logo has been removed.", { autoClose: 2000 });
   };
 
   const handleInputChange = (field: string, value: string) => {

@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { CategoryTable } from "../components/table";
 import { CategoryActions } from "../components/action";
 import { CategorySelection } from "../components/selection";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 import { useCategory } from "@/hooks/useCategory";
 
 export default function CategoriesPage() {
@@ -80,15 +80,19 @@ export default function CategoriesPage() {
       ).length;
 
       if (successfulDeletes > 0) {
-        toast.success(`Successfully deleted ${successfulDeletes} categories`);
+        toast.success(`Successfully deleted ${successfulDeletes} categories`, {
+          autoClose: 2000,
+        });
       }
       if (failedDeletes > 0) {
-        toast.error(`Failed to delete ${failedDeletes} categories`);
+        toast.error(`Failed to delete ${failedDeletes} categories`, {
+          autoClose: 2000,
+        });
       }
 
       setSelectedCategories([]);
     } catch (error) {
-      toast.error("Failed to delete categories");
+      toast.error("Failed to delete categories", { autoClose: 2000 });
     }
   }, [selectedCategories, removeCategory]);
 
@@ -96,9 +100,9 @@ export default function CategoriesPage() {
     async (id: string) => {
       try {
         await removeCategory(id);
-        toast.success("Category deleted successfully");
+        toast.success("Category deleted successfully", { autoClose: 2000 });
       } catch (error) {
-        toast.error("Failed to delete category");
+        toast.error("Failed to delete category", { autoClose: 2000 });
       }
     },
     [removeCategory]

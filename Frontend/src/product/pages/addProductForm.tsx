@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { ArrowLeft, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarNav } from "../components/addProduct/quickNavigation";
@@ -51,43 +51,64 @@ export default function AddProductPage() {
   const [formData, setFormData] = useState<Partial<Product>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showAlertDialog, setShowAlertDialog] = useState(false);
+  const [shouldNavigate, setShouldNavigate] = useState(false);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
   // Get the product state to check status
   const { status, error } = useAppSelector((state: RootState) => state.product);
 
-  // In AddProductPage.tsx - Use the same simple navigation pattern
+  // Fixed useEffect with better state management
   useEffect(() => {
     if (status === "succeeded" && isSubmitting) {
-      toast.success("Product created successfully");
+      // Show success toast
+      toast.success("Product created successfully", { autoClose: 2000 });
+
+      // Reset states first
       setIsSubmitting(false);
       dispatch(resetOperationStatus());
-      navigate("/products");
+
+      // Set flag to navigate
+      setShouldNavigate(true);
     }
 
     if (status === "failed" && isSubmitting) {
-      toast.error(error || "Failed to create product");
       setIsSubmitting(false);
+      toast.error(error || "Failed to create product", { autoClose: 2000 });
+      dispatch(resetOperationStatus());
     }
-  }, [status, error, isSubmitting, navigate, dispatch]);
+  }, [status, error, isSubmitting, shouldNavigate, dispatch]);
 
-  const updateFormData = (newData: Partial<Product>) => {
+  // Separate useEffect for navigation to avoid interference
+  useEffect(() => {
+    if (shouldNavigate) {
+      setShouldNavigate(false);
+      navigate("/products");
+    }
+  }, [shouldNavigate, navigate]);
+
+  // Use useCallback to prevent unnecessary re-renders of child components
+  const updateFormData = useCallback((newData: Partial<Product>) => {
     setFormData((prev) => ({ ...prev, ...newData }));
-  };
+  }, []);
 
-  // src/product/pages/AddProductPage.tsx (updated handleSubmit)
+  // Fixed handleSubmit function with better state management
   const handleSubmit = async () => {
+    // Reset navigation flag
+    setShouldNavigate(false);
+
     // Basic validation
     if (!formData.name || !formData.stock || !formData.price) {
-      toast.error("Please fill in all required fields");
+      toast.error("Please fill in all required fields", { autoClose: 2000 });
       setCurrentSection("product-information");
       return;
     }
 
     // Validate that at least one image is uploaded
     if (!formData.images || formData.images.length === 0) {
-      toast.error("Please upload at least one product image");
+      toast.error("Please upload at least one product image", {
+        autoClose: 2000,
+      });
       setCurrentSection("product-media");
       return;
     }
@@ -98,26 +119,36 @@ export default function AddProductPage() {
         const variantData = JSON.parse(formData.variantData);
         const validation = validateVariantData(variantData);
         if (!validation.isValid) {
-          toast.error("Please fix variant errors before submitting");
+          toast.error("Please fix variant errors before submitting", {
+            autoClose: 2000,
+          });
           setCurrentSection("variants");
           return;
         }
       } catch (error) {
-        toast.error("Invalid variant data format");
+        toast.error("Invalid variant data format", { autoClose: 2000 });
         setCurrentSection("variants");
         return;
       }
     }
+
     try {
       setIsSubmitting(true);
 
+      // Create a stable form data object to prevent reference changes
+      const submissionData = { ...formData };
+
       // Dispatch the createProduct action
-      await dispatch(createProduct(formData as Omit<Product, "id" | "shopId">));
-    } catch (error: any) {
-      toast.error(
-        "Failed to create product: " + (error.message || "Unknown error")
+      await dispatch(
+        createProduct(submissionData as Omit<Product, "id" | "shopId">)
       );
+    } catch (error: any) {
       setIsSubmitting(false);
+      setShouldNavigate(false);
+      toast.error(
+        "Failed to create product: " + (error.message || "Unknown error"),
+        { autoClose: 2000 }
+      );
     }
   };
 
@@ -130,19 +161,20 @@ export default function AddProductPage() {
     }
   };
 
-  // Reset submitting state when component unmounts or when navigation occurs
+  // Reset states when component unmounts
   useEffect(() => {
     return () => {
       setIsSubmitting(false);
+      setShouldNavigate(false);
+      dispatch(resetOperationStatus());
     };
-  }, []);
+  }, [dispatch]);
 
   return (
     <div className="min-h-full bg-background">
       <header className="sticky top-0 z-50 w-full border-b bg-background">
         <div className="container flex h-14 items-center justify-between">
           <div className="flex items-center gap-4">
-            {/* <Button variant="ghost" size="icon"> */}
             <Button variant="ghost" size="icon" onClick={handleBackClick}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
@@ -152,7 +184,6 @@ export default function AddProductPage() {
               <HelpCircle className="h-4 w-4" />
             </Button>
           </div>
-          {/* <Button>Add product</Button> */}
           <Button onClick={handleSubmit} disabled={isSubmitting}>
             {isSubmitting ? "Adding product..." : "Add product"}
           </Button>
@@ -182,7 +213,11 @@ export default function AddProductPage() {
               <Inventory data={formData} onValueChange={updateFormData} />
             )}
             {currentSection === "variants" && (
-              <Variants data={formData} onValueChange={updateFormData} />
+              <Variants
+                data={formData}
+                onValueChange={updateFormData}
+                key="variants-form" // Add key to force clean re-render
+              />
             )}
           </div>
         </main>

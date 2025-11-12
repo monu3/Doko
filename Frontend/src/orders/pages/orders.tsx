@@ -241,7 +241,6 @@ export default function OrdersPage() {
     );
   }
 
-  console.log("Passing onOrderClick to OrderTable:", typeof handleOrderClick);
 
   return (
     <div className="p-4 max-w-[1400px] mx-auto space-y-4">

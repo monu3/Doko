@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Palette, Sparkles } from "lucide-react";
+import { toast } from "react-toastify";
 
 const themeData = {
   default: {
@@ -51,6 +52,13 @@ export const ThemeSelector = () => {
 
   const handleThemeChange = (theme: ThemeKey) => {
     if (shop) {
+      const themeName =
+        themeData[theme as keyof typeof themeData]?.name || theme;
+
+      // Show success toast with the theme name
+      toast.success(`${themeName} theme activated successfully!`, {
+        autoClose: 2000,
+      });
       dispatch(updateShopTheme({ shopId: shop.id, theme }));
     }
   };

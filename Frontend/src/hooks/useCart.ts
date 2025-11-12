@@ -50,6 +50,7 @@ export const useCart = () => {
     paymentLoading,
     paymentRedirectHtml,
     paymentError,
+    paymentFormData,
   } = cartState;
 
   // Memoized action creators
@@ -208,6 +209,7 @@ export const useCart = () => {
     paymentLoading,
     paymentRedirectHtml,
     paymentError,
+    paymentFormData,
 
     // Actions
     addItemToCart,
@@ -220,6 +222,7 @@ export const useCart = () => {
     fetchCount,
     createOrder,
     initiatePayment: initiatePaymentProcess,
+    initiatePaymentProcess,
     clearErrors,
     resetCartState,
 

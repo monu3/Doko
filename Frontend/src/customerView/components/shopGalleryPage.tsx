@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "react-toastify";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -61,10 +61,8 @@ const ShopGalleryPage = ({ onSignupRequired }: ShopGalleryPageProps) => {
   // Load gallery + follower counts on mount
   useEffect(() => {
     loadGalleryWithCounts().catch(() => {
-      toast({
-        title: "Error",
-        description: "Failed to load shop gallery",
-        variant: "destructive",
+      toast.error("Failed to load shops. Please try again later.", {
+        autoClose: 2000,
       });
     });
   }, [loadGalleryWithCounts]);
@@ -80,11 +78,7 @@ const ShopGalleryPage = ({ onSignupRequired }: ShopGalleryPageProps) => {
     if (!isAuthenticated) {
       onSignupRequired
         ? onSignupRequired()
-        : toast({
-            title: "Sign in required",
-            description: "Please sign in to follow shops",
-            variant: "destructive",
-          });
+        : toast.info("Please sign in to follow shops", { autoClose: 2000 });
       return;
     }
 
@@ -95,10 +89,10 @@ const ShopGalleryPage = ({ onSignupRequired }: ShopGalleryPageProps) => {
       // Update local follower count
       const increment = !isFollowing(shopId);
       updateFollowerCount(shopId, increment);
-      toast({
-        title: "Success",
-        description: increment ? "Shop followed" : "Shop unfollowed",
-      });
+      toast.success(
+        `${increment ? "Followed" : "Unfollowed"} shop successfully`,
+        { autoClose: 2000 }
+      );
     } catch (err) {
       console.error("Follow/unfollow error:", err);
     } finally {
@@ -110,10 +104,8 @@ const ShopGalleryPage = ({ onSignupRequired }: ShopGalleryPageProps) => {
     if (!isAuthenticated) {
       onSignupRequired
         ? onSignupRequired()
-        : toast({
-            title: "Sign in required",
-            description: "Please sign in to add items to wishlist",
-            variant: "destructive",
+        : toast.info("Please sign in to manage your wishlist", {
+            autoClose: 2000,
           });
       return;
     }
@@ -122,10 +114,12 @@ const ShopGalleryPage = ({ onSignupRequired }: ShopGalleryPageProps) => {
       const newSet = new Set(prev);
       const action = newSet.has(shopId) ? "Removed" : "Added";
       newSet.has(shopId) ? newSet.delete(shopId) : newSet.add(shopId);
-      toast({
-        title: `${action} from wishlist`,
-        description: `Item ${action.toLowerCase()} your wishlist`,
-      });
+      toast.success(
+        `${action} shop ${action === "Added" ? "to" : "from"} wishlist`,
+        {
+          autoClose: 2000,
+        }
+      );
       return newSet;
     });
   };

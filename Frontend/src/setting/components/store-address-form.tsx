@@ -56,9 +56,11 @@ export function StoreAddressForm() {
       await dispatch(
         updateStoreAddress({ shopId: shop.id, address: formData })
       ).unwrap();
-      toast.success("Store address updated successfully!");
+      toast.success("Store address updated successfully!", { autoClose: 2000 });
     } catch (error) {
-      toast.error("Failed to update store address. Please try again.");
+      toast.error("Failed to update store address. Please try again.", {
+        autoClose: 2000,
+      });
     }
   };
 
@@ -84,7 +86,7 @@ export function StoreAddressForm() {
         postalCode: "",
       });
     }
-    toast.info("Form has been reset to original values.");
+    toast.info("Form has been reset to original values.", { autoClose: 2000 });
   };
 
   return (

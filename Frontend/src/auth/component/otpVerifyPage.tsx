@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { verifyOtp } from "@/auth/slice/authSlice";
+import { toast } from "react-toastify";
 
 export function OTPPage() {
   const [loading, setLoading] = useState<boolean>(false);
@@ -33,14 +34,14 @@ export function OTPPage() {
   useEffect(() => {
     if (status === "succeeded" && token && ownerId) {
       navigate("/shop-details", {
-        state: { email } // Pass email if needed
+        state: { email }, // Pass email if needed
       });
     }
   }, [token, ownerId, status, navigate, email]);
 
   const handleVerifyOTP = async (otp: string) => {
     if (!email) {
-      console.error("Email is missing");
+      toast.error("Email is missing");
       return;
     }
 
@@ -51,13 +52,12 @@ export function OTPPage() {
 
     setLoading(true);
     setOtpError(null);
-    
+
     try {
-      const result = await dispatch(verifyOtp({ email, otp })).unwrap();
-      console.log("Verification successful:", result);
+      await dispatch(verifyOtp({ email, otp })).unwrap();
+      toast.success("OTP verified successfully!", { autoClose: 2000 });
     } catch (error) {
-      console.error("Verification failed:", error);
-      setOtpError(typeof error === 'string' ? error : "Invalid OTP");
+      setOtpError(typeof error === "string" ? error : "Invalid OTP");
     } finally {
       setLoading(false);
     }
@@ -65,7 +65,7 @@ export function OTPPage() {
 
   const handleResendOTP = async () => {
     if (!email) {
-      console.error("Email is missing");
+      toast.error("Email is missing");
       return;
     }
 
@@ -74,7 +74,7 @@ export function OTPPage() {
       await api.post("/auth/resend-otp", { email });
       setCooldown(120);
     } catch (error: any) {
-      console.error("Resend failed:", error);
+      toast.error("Resend failed:", error);
     } finally {
       setResendLoading(false);
     }
@@ -90,7 +90,7 @@ export function OTPPage() {
               const otpInputs = Array.from(
                 document.querySelectorAll<HTMLInputElement>("[data-otp-slot]")
               );
-              const otp = otpInputs.map(input => input.value).join("");
+              const otp = otpInputs.map((input) => input.value).join("");
               handleVerifyOTP(otp);
             }}
             className="flex flex-col gap-6"
@@ -118,9 +118,10 @@ export function OTPPage() {
                   onChange={(e) => {
                     // Auto-focus next input
                     if (e.target.value && index < 5) {
-                      const nextInput = document.querySelector<HTMLInputElement>(
-                        `[data-otp-slot]:nth-child(${index + 2})`
-                      );
+                      const nextInput =
+                        document.querySelector<HTMLInputElement>(
+                          `[data-otp-slot]:nth-child(${index + 2})`
+                        );
                       nextInput?.focus();
                     }
                   }}
@@ -128,11 +129,7 @@ export function OTPPage() {
               ))}
             </div>
 
-            <Button 
-              type="submit" 
-              className="w-full" 
-              disabled={loading}
-            >
+            <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Verifying..." : "Verify OTP"}
             </Button>
 

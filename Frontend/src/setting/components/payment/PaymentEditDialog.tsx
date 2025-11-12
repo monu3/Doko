@@ -17,6 +17,7 @@ import { Switch } from "@/components/ui/switch";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import type { RootState } from "@/store";
 import { updatePaymentConfig } from "@/setting/slice/paymentSlice";
+import { toast } from "react-toastify";
 
 interface PaymentEditDialogProps {
   open: boolean;
@@ -157,9 +158,15 @@ export function PaymentEditDialog({
         ).unwrap();
       }
 
+      toast.success("Payment configuration updated successfully!", {
+        autoClose: 2000,
+      });
       onClose();
     } catch (error) {
       console.error("Failed to update configuration:", error);
+      toast.error("Failed to update payment configuration", {
+        autoClose: 2000,
+      });
     }
   };
 

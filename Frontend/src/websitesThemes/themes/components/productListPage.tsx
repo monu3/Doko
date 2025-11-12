@@ -38,6 +38,7 @@ import { useCart } from "@/hooks/useCart";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useProductList } from "@/hooks/useProductList";
 import { Product, ProductWithVariants } from "@/product/types/product";
+import { toast } from "react-toastify";
 
 const ProductListPage: React.FC<ProductCatalogProps> = ({
   selectedCategoryId = "",
@@ -192,7 +193,7 @@ const ProductListPage: React.FC<ProductCatalogProps> = ({
     e.preventDefault();
 
     if (!isAuthenticated) {
-      console.log("Please sign in to add items to cart");
+      toast.info("Please sign in to add items to cart", { autoClose: 2000 });
       return;
     }
 
@@ -209,9 +210,13 @@ const ProductListPage: React.FC<ProductCatalogProps> = ({
         selectedVariant: variantString || undefined,
       }).unwrap();
 
+      toast.success("Item added to cart", { autoClose: 2000 });
       fetchGroupedItems();
     } catch (error) {
       console.error("Failed to add to cart:", error);
+      toast.error("Failed to add item to cart. Please try again.", {
+        autoClose: 2000,
+      });
     }
   };
 
@@ -224,7 +229,9 @@ const ProductListPage: React.FC<ProductCatalogProps> = ({
     e.preventDefault();
 
     if (!isAuthenticated) {
-      console.log("Please sign in to add items to wishlist");
+      toast.info("Please sign in to add items to wishlist", {
+        autoClose: 2000,
+      });
       return;
     }
 
@@ -234,14 +241,19 @@ const ProductListPage: React.FC<ProductCatalogProps> = ({
       if (productIsInWishlist) {
         optimisticRemoveFromWishlist(product.id);
         await removeItem(product.id).unwrap();
+        toast.success("Item removed from wishlist", { autoClose: 2000 });
       } else {
         optimisticAddToWishlist(product.id);
         await addItemToWishlist(product.id).unwrap();
+        toast.success("Item added to wishlist", { autoClose: 2000 });
       }
 
       fetchWishlistItems();
     } catch (error) {
       console.error("Failed to update wishlist:", error);
+      toast.error("Failed to update wishlist. Please try again.", {
+        autoClose: 2000,
+      });
     }
   };
 
@@ -254,7 +266,7 @@ const ProductListPage: React.FC<ProductCatalogProps> = ({
     e.preventDefault();
 
     if (!isAuthenticated || !product) {
-      console.log("Please sign in to add items to cart");
+      toast.info("Please sign in to add items to cart", { autoClose: 2000 });
       return;
     }
 
@@ -273,10 +285,14 @@ const ProductListPage: React.FC<ProductCatalogProps> = ({
         selectedVariant: variantString || undefined,
       }).unwrap();
 
+      toast.success("Item added to cart", { autoClose: 2000 });
       fetchGroupedItems();
       setIsQuickViewOpen(false);
     } catch (error) {
       console.error("Failed to add to cart:", error);
+      toast.error("Failed to add item to cart. Please try again.", {
+        autoClose: 2000,
+      });
     } finally {
       setQuickViewAddingToCart(false);
     }
@@ -285,7 +301,9 @@ const ProductListPage: React.FC<ProductCatalogProps> = ({
   // Quick view wishlist toggle
   const handleQuickViewWishlistToggle = async () => {
     if (!isAuthenticated || !selectedProduct) {
-      console.log("Please sign in to add items to wishlist");
+      toast.info("Please sign in to add items to wishlist", {
+        autoClose: 2000,
+      });
       return;
     }
 
@@ -295,14 +313,19 @@ const ProductListPage: React.FC<ProductCatalogProps> = ({
       if (productIsInWishlist) {
         optimisticRemoveFromWishlist(selectedProduct.id);
         await removeItem(selectedProduct.id).unwrap();
+        toast.success("Item removed from wishlist", { autoClose: 2000 });
       } else {
         optimisticAddToWishlist(selectedProduct.id);
         await addItemToWishlist(selectedProduct.id).unwrap();
+        toast.success("Item added to wishlist", { autoClose: 2000 });
       }
 
       fetchWishlistItems();
     } catch (error) {
       console.error("Failed to update wishlist:", error);
+      toast.error("Failed to update wishlist. Please try again.", {
+        autoClose: 2000,
+      });
     }
   };
 

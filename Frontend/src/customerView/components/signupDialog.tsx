@@ -12,6 +12,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { CheckCircle, Loader2, AlertCircle } from "lucide-react";
 import { useCustomer } from "@/hooks/useCustomer";
+import { toast } from "react-toastify";
 
 interface SignupDialogProps {
   open: boolean;
@@ -55,6 +56,10 @@ export default function SignupDialog({
   // Auto-close dialog when signup is completed and user is authenticated
   useEffect(() => {
     if (signupStatus === "completed" && isAuthenticated && user) {
+      toast.success(
+        `Welcome to Doko! Your account has been created successfully.`,
+        { autoClose: 2000 }
+      );
       const timer = setTimeout(() => {
         onOpenChange(false);
       }, 2000);
@@ -97,8 +102,13 @@ export default function SignupDialog({
 
     try {
       await signupInitiate({ email: email.trim() }).unwrap();
+      toast.info(`Verification code sent to ${email.trim()}`, {
+        autoClose: 2000,
+      });
     } catch (error) {
-      // Error is handled by the slice
+      toast.error("Failed to send verification code. Please try again.", {
+        autoClose: 2000,
+      });
     }
   };
 
@@ -123,8 +133,12 @@ export default function SignupDialog({
         role: "USER",
       }).unwrap();
 
+      toast.success("✅ Email verified successfully!", { autoClose: 2000 });
       // The dialog will auto-close via useEffect when signupStatus becomes "completed"
     } catch (error) {
+      toast.error("OTP verification failed. Please try again.", {
+        autoClose: 2000,
+      });
       // Error is handled by the slice
     }
   };
@@ -134,9 +148,14 @@ export default function SignupDialog({
       try {
         const result = await resendOtpCode({ email: currentEmail }).unwrap();
         console.log("OTP resend successful:", result);
+        toast.info(`Verification code resent to ${currentEmail}`, {
+          autoClose: 2000,
+        });
       } catch (error) {
         console.error("OTP resend failed:", error);
-        // Error is handled by the slice
+        toast.error("Failed to resend verification code. Please try again.", {
+          autoClose: 2000,
+        });
       }
     }
   };
@@ -153,6 +172,7 @@ export default function SignupDialog({
     resetSignup();
     setOtp("");
     setOtpError("");
+    toast.info("Enter your email address to continue", { autoClose: 2000 });
   };
 
   const getUserAvatar = (email: string) => {

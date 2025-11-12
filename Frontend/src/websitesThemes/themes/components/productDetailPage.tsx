@@ -22,6 +22,7 @@ import { useCustomer } from "@/hooks/useCustomer";
 import { useCart } from "@/hooks/useCart";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useProductDetail } from "@/hooks/useProductDetail";
+import { toast } from "react-toastify";
 
 const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   product,
@@ -69,7 +70,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   // Helper function to handle add to cart with loading state
   const handleAddToCart = async () => {
     if (!isAuthenticated) {
-      console.log("Please sign in to add items to cart");
+      toast.info("Please sign in to add items to cart", { autoClose: 2000 });
       return;
     }
 
@@ -87,11 +88,15 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
         quantity: quantity,
         selectedVariant: variantString || undefined,
       }).unwrap();
+      toast.success("Item added to cart", { autoClose: 2000 });
 
       // Refresh cart after adding
       fetchGroupedItems();
     } catch (error) {
       console.error("Failed to add to cart:", error);
+      toast.error("Failed to add item to cart. Please try again.", {
+        autoClose: 2000,
+      });
     }
   };
 
@@ -107,6 +112,7 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       console.log("Proceeding to checkout...");
+      toast.info("Redirecting to checkout...", { autoClose: 2000 });
       // TODO: Redirect to checkout
 
       setBuyingNow(false);
@@ -135,7 +141,9 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   // Helper function to handle wishlist toggle
   const handleWishlistToggle = async () => {
     if (!isAuthenticated) {
-      console.log("Please sign in to add items to wishlist");
+      toast.info("Please sign in to add items to wishlist", {
+        autoClose: 2000,
+      });
       return;
     }
 
@@ -146,15 +154,20 @@ const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
       if (productIsInWishlist) {
         optimisticRemoveFromWishlist(product.id);
         await removeItem(product.id).unwrap();
+        toast.success("Item removed from wishlist", { autoClose: 2000 });
       } else {
         optimisticAddToWishlist(product.id);
         await addItemToWishlist(product.id).unwrap();
+        toast.success("Item added to wishlist", { autoClose: 2000 });
       }
 
       // Refresh wishlist after update
       fetchWishlistItems();
     } catch (error) {
       console.error("Failed to update wishlist:", error);
+      toast.error("Failed to update wishlist. Please try again.", {
+        autoClose: 2000,
+      });
     }
   };
 

@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Check,
@@ -11,7 +11,6 @@ import {
   ArrowLeft,
   Download,
   Loader2,
-  X,
   AlertCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -19,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "react-toastify";
 import { jsPDF } from "jspdf";
 import { useCustomerAuth } from "@/hooks/useCustomer";
 import { useCart } from "@/hooks/useCart";
@@ -120,14 +119,14 @@ export default function CheckoutFlow({
   onBack,
   onOrderComplete,
 }: CheckoutFlowProps) {
-  const { toast } = useToast();
   const { user } = useCustomerAuth();
   const {
     createOrder,
     clearErrors,
     orderLoading,
-    initiatePayment,
+    initiatePaymentProcess,
     paymentLoading,
+    clearAllItems,
   } = useCart();
 
   const { paymentMethods, loading: paymentMethodsLoading } =
@@ -138,7 +137,6 @@ export default function CheckoutFlow({
   const [orderData, setOrderData] = useState<OrderData | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
-  const [setPaymentRedirectData] = useState<any>(null);
 
   const [addressData, setAddressData] = useState<AddressData>({
     name: "",
@@ -162,7 +160,45 @@ export default function CheckoutFlow({
     paymentMethods.includes(option.id)
   );
 
-  // Create order first (for both COD and online payments)
+  // Reset state when component mounts or shopData changes
+  useEffect(() => {
+    setActiveStep(1);
+    setOrderData(null);
+    setPaymentMethod("COD");
+    setIsProcessing(false);
+    setErrors({});
+    setAddressData({
+      name: "",
+      email: user?.email || "",
+      mobile: "",
+      country: "Nepal",
+      address: "",
+      city: "",
+    });
+  }, [shopData.shopId, user?.email]);
+
+  // Handle payment return from gateway
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get("paymentStatus");
+    const orderIdParam = urlParams.get("orderId");
+
+    if (paymentStatus && orderIdParam) {
+      if (paymentStatus === "success") {
+        toast.success("Payment completed successfully!", {
+          position: "top-right",
+        });
+      } else {
+        toast.error("Payment failed. Please try again.", {
+          position: "top-right",
+        });
+      }
+
+      // Clean up URL parameters
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
+
   const createOrderFirst = async (): Promise<{
     id: string;
     orderNumber: string;
@@ -187,7 +223,11 @@ export default function CheckoutFlow({
     const result = await createOrder(orderPayload);
 
     if (result.meta.requestStatus === "fulfilled" && result.payload) {
-      return result.payload as { id: string; orderNumber: string };
+      const orderResponse = result.payload as {
+        id: string;
+        orderNumber: string;
+      };
+      return orderResponse;
     } else {
       const errorMessage =
         (result.payload as string) || "Failed to create order";
@@ -195,74 +235,37 @@ export default function CheckoutFlow({
     }
   };
 
-  // Initiate payment for online payment methods
-  const initiateOnlinePayment = async (orderId: string): Promise<any> => {
-    const paymentMethodLower = paymentMethod.toLowerCase();
-
-    const paymentData = {
-      shopId: shopData.shopId,
-      paymentMethod: paymentMethod,
-      orderId: orderId,
-      amountMinor: amountMinor,
-      returnUrl: `http://localhost:8080/api/payments/${paymentMethodLower}/success`,
-      failureUrl: `http://localhost:8080/api/payments/${paymentMethodLower}/failure`,
+  // Function to submit eSewa payment form
+  const submitEsewaForm = (formData: {
+    formUrl: string;
+    fields: {
+      amount: string;
+      tax_amount: string;
+      total_amount: string;
+      transaction_uuid: string;
+      product_code: string;
+      product_service_charge: string;
+      product_delivery_charge: string;
+      success_url: string;
+      failure_url: string;
+      signed_field_names: string;
+      signature: string;
     };
-
-    console.log("Initiating payment with data:", paymentData);
-
-    const paymentResult = await initiatePayment(paymentData);
-
-    if (
-      paymentResult.meta.requestStatus === "fulfilled" &&
-      paymentResult.payload
-    ) {
-      return paymentResult.payload;
-    } else {
-      const errorMessage =
-        (paymentResult.payload as string) || "Failed to initiate payment";
-      throw new Error(errorMessage);
-    }
-  };
-
-  // Redirect to payment gateway in same window
-  const redirectToPaymentInSameWindow = (paymentData: any) => {
-    console.log("Redirecting to payment in same window:", paymentData);
-
-    if (!paymentData?.formUrl || !paymentData?.fields) {
-      toast({
-        title: "Payment Error",
-        description:
-          "Unable to redirect to payment gateway. Missing required data.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  }) => {
     const form = document.createElement("form");
     form.method = "POST";
-    form.action = paymentData.formUrl;
-    form.target = "_self"; // This makes it open in same window
+    form.action = formData.formUrl;
+    form.style.display = "none";
 
-    // Add all form fields
-    Object.entries(paymentData.fields).forEach(([key, value]) => {
+    Object.entries(formData.fields).forEach(([key, value]) => {
       const input = document.createElement("input");
       input.type = "hidden";
       input.name = key;
-      input.value = value as string;
+      input.value = value;
       form.appendChild(input);
     });
 
-    // Add the form to the page and submit it
     document.body.appendChild(form);
-
-    // Show loading message
-    toast({
-      title: "Redirecting to Payment Gateway",
-      description:
-        "Please wait while we redirect you to the secure payment page...",
-    });
-
-    // Submit the form
     form.submit();
   };
 
@@ -272,93 +275,91 @@ export default function CheckoutFlow({
 
     try {
       if (!user) {
-        toast({
-          title: "Authentication Required",
-          description: "Please sign in to place an order.",
-          variant: "destructive",
+        toast.error("You must be logged in to place an order.", {
+          position: "top-right",
         });
         setIsProcessing(false);
         return;
       }
 
       // Step 1: Always create order first
-      console.log("Creating order...");
       const createdOrder = await createOrderFirst();
       const orderId = createdOrder.id;
       const orderNumber = createdOrder.orderNumber;
 
-      console.log("Order created successfully:", orderId);
-
-      // Set initial order data for confirmation page
-      const initialOrderData: OrderData = {
-        orderId: orderId,
-        orderNumber: orderNumber,
-        items: shopData.shopItems,
-        address: addressData,
-        paymentMethod,
-        paymentStatus: paymentMethod === "COD" ? "COMPLETED" : "INITIATED",
-        subtotal,
-        deliveryFee,
-        total,
-        orderDate: new Date(),
-      };
-
-      // Step 2: Handle based on payment method
+      // Step 2: Handle payment based on payment method
       if (paymentMethod === "COD") {
-        // For COD, set order data and move to confirmation step
-        console.log("COD payment - setting order data:", initialOrderData);
-        setOrderData(initialOrderData);
-        setIsProcessing(false); // Stop processing before state change
+        const initialOrderData: OrderData = {
+          orderId: orderId,
+          orderNumber: orderNumber,
+          items: shopData.shopItems,
+          address: addressData,
+          paymentMethod,
+          paymentStatus: "COMPLETED",
+          subtotal,
+          deliveryFee,
+          total,
+          orderDate: new Date(),
+        };
 
-        // Use setTimeout to ensure state updates are processed
-        setTimeout(() => {
-          console.log("Moving to confirmation step (step 3)");
-          setActiveStep(3);
-          toast({
-            title: "Order Placed Successfully!",
-            description: `Your order ${orderNumber} has been placed successfully.`,
-          });
-        }, 100);
+        setOrderData(initialOrderData);
+        setActiveStep(3);
+        setIsProcessing(false);
+
+        const paymentMethodName =
+          basePaymentOptions.find((p) => p.id === paymentMethod)?.name ||
+          paymentMethod;
+        toast.success(`Order placed successfully with ${paymentMethodName}!`, {
+          position: "top-right",
+        });
       } else {
-        // For online payments, store order data before redirecting
-        setOrderData(initialOrderData);
+        // Online payment
+        const frontendBaseUrl = window.location.origin;
+        const frontendRedirectUrl = `${frontendBaseUrl}/customerView`;
 
-        // Store order data in sessionStorage before redirect (so we can retrieve it on return)
-        sessionStorage.setItem(
-          "pendingOrder",
-          JSON.stringify(initialOrderData)
-        );
+        const returnUrl = `http://localhost:8080/api/payments/esewa/success?frontendRedirect=${encodeURIComponent(
+          frontendRedirectUrl
+        )}`;
+        const failureUrl = `http://localhost:8080/api/payments/esewa/failure?frontendRedirect=${encodeURIComponent(
+          frontendRedirectUrl
+        )}`;
 
-        console.log("Initiating online payment for order:", orderId);
-        const paymentResponse = await initiateOnlinePayment(orderId);
+        // Initiate payment
+        const paymentResult = await initiatePaymentProcess({
+          shopId: shopData.shopId,
+          paymentMethod: paymentMethod,
+          orderId: orderId,
+          amountMinor: amountMinor,
+          returnUrl: returnUrl,
+          failureUrl: failureUrl,
+        });
 
-        if (paymentResponse) {
-          setPaymentRedirectData(paymentResponse);
-          // Don't set isProcessing to false - we're redirecting
-          // Redirect immediately in same window
-          redirectToPaymentInSameWindow(paymentResponse);
-        } else {
-          setIsProcessing(false);
-          toast({
-            title: "Payment Error",
-            description: "Failed to initiate payment. Please try again.",
-            variant: "destructive",
+        if (
+          paymentResult.meta.requestStatus === "fulfilled" &&
+          paymentResult.payload
+        ) {
+          const paymentData = paymentResult.payload as any;
+
+          // Submit the payment form
+          submitEsewaForm({
+            formUrl: paymentData.formUrl,
+            fields: paymentData.fields,
           });
+        } else {
+          const errorMessage =
+            (paymentResult.payload as string) || "Failed to initiate payment";
+          throw new Error(errorMessage);
         }
       }
     } catch (error: any) {
-      console.error("Order/payment process error:", error);
-      toast({
-        title: "Process Failed",
-        description:
-          error.message || "There was an error processing your order.",
-        variant: "destructive",
-      });
+      toast.error(
+        error.message || "There was an error processing your order.",
+        { position: "top-right" }
+      );
       setIsProcessing(false);
     }
   };
 
-  // Rest of your existing functions (validateAddressForm, handleInputChange, etc.)
   const originalTotal = shopData.shopItems.reduce(
     (sum, item) => sum + (item.originalPrice || item.price) * item.quantity,
     0
@@ -491,25 +492,22 @@ export default function CheckoutFlow({
     doc.text(`Total: Rs. ${orderData.total}`, 20, yPos + 20);
 
     doc.save(`receipt-${orderData.orderNumber}.pdf`);
+    toast.success("Receipt downloaded successfully!", {
+      position: "top-right",
+    });
   };
 
-  const handleOrderComplete = () => {
+  const handleOrderComplete = async () => {
     clearErrors();
-    onOrderComplete();
-  };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "COMPLETED":
-        return <Check className="h-6 w-6 text-green-600" />;
-      case "FAILED":
-        return <X className="h-6 w-6 text-red-600" />;
-      case "INITIATED":
-      case "PENDING":
-        return <Loader2 className="h-6 w-6 text-blue-600 animate-spin" />;
-      default:
-        return <AlertCircle className="h-6 w-6 text-gray-600" />;
+    // Clear cart now that order is complete
+    try {
+      await clearAllItems().unwrap();
+    } catch (error) {
+      console.error("Failed to clear cart:", error);
     }
+
+    onOrderComplete();
   };
 
   const getStatusColor = (status: string) => {
@@ -523,23 +521,6 @@ export default function CheckoutFlow({
         return "text-blue-600 bg-blue-100";
       default:
         return "text-gray-600 bg-gray-100";
-    }
-  };
-
-  const getStatusMessage = (status: string) => {
-    switch (status) {
-      case "COMPLETED":
-        return "Your order has been confirmed! You will receive a confirmation email shortly.";
-      case "FAILED":
-        return "There was an issue with your payment. The shop owner will contact you for alternative arrangements.";
-      case "INITIATED":
-        return paymentMethod === "COD"
-          ? "Order has been placed successfully with Cash on Delivery."
-          : "Your payment is being processed. You will receive an email confirmation once completed.";
-      case "PENDING":
-        return "Payment is being processed. Please check your email for updates.";
-      default:
-        return "Order processing in progress.";
     }
   };
 
@@ -709,8 +690,9 @@ export default function CheckoutFlow({
             {paymentMethod !== "COD" && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
                 <p className="text-blue-800 text-sm">
-                  You will be redirected to the payment gateway in this window
-                  to complete your payment securely.
+                  You will be redirected to{" "}
+                  {paymentMethod === "ESEWA" ? "eSewa" : paymentMethod} payment
+                  gateway to complete your payment.
                 </p>
               </div>
             )}
@@ -725,7 +707,7 @@ export default function CheckoutFlow({
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                   {paymentMethod === "COD"
                     ? "Placing Order..."
-                    : "Redirecting to Payment..."}
+                    : "Processing Payment..."}
                 </>
               ) : paymentMethod === "COD" ? (
                 "Place Order"
@@ -788,133 +770,230 @@ export default function CheckoutFlow({
     </div>
   );
 
-  const renderConfirmationStep = () => (
-    <div className="text-center space-y-6">
-      {/* Status Icon */}
-      <div
-        className={cn(
-          "mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4",
-          orderData?.paymentStatus === "COMPLETED"
-            ? "bg-green-100"
-            : orderData?.paymentStatus === "FAILED"
-            ? "bg-red-100"
-            : "bg-blue-100"
-        )}
-      >
-        {orderData && getStatusIcon(orderData.paymentStatus)}
-      </div>
-
-      <div>
-        <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-          {orderData?.paymentStatus === "COMPLETED"
-            ? "Order Confirmed!"
-            : orderData?.paymentStatus === "FAILED"
-            ? "Payment Failed"
-            : "Order Received!"}
-        </h2>
-        <p className="text-gray-600 mb-4">
-          {orderData ? getStatusMessage(orderData.paymentStatus) : ""}
-        </p>
-
-        {/* Status Badge */}
-        {orderData && (
-          <div
-            className={cn(
-              "inline-flex items-center px-3 py-1 rounded-full text-sm font-medium",
-              getStatusColor(orderData.paymentStatus)
-            )}
-          >
-            {orderData.paymentStatus}
+  const renderConfirmationStep = () => {
+    if (!orderData) {
+      return (
+        <div className="text-center space-y-6">
+          <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+            <Loader2 className="h-8 w-8 text-gray-600 animate-spin" />
           </div>
-        )}
-      </div>
-
-      <div className="bg-gray-50 p-6 rounded-lg max-w-md mx-auto">
-        <h3 className="font-semibold mb-4">Order Summary</h3>
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span>Order Number:</span>
-            <span className="font-medium">{orderData?.orderNumber}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Order ID:</span>
-            <span className="font-medium text-xs">{orderData?.orderId}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Items:</span>
-            <span>{orderData?.items.length}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Total Amount:</span>
-            <span className="font-medium">NPR {orderData?.total}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Payment Method:</span>
-            <span>
-              {
-                basePaymentOptions.find(
-                  (p) => p.id === orderData?.paymentMethod
-                )?.name
-              }
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span>Payment Status:</span>
-            <span
-              className={cn(
-                "font-medium",
-                orderData?.paymentStatus === "COMPLETED"
-                  ? "text-green-600"
-                  : orderData?.paymentStatus === "FAILED"
-                  ? "text-red-600"
-                  : "text-blue-600"
-              )}
-            >
-              {orderData?.paymentStatus}
-            </span>
-          </div>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+            Processing Order...
+          </h2>
+          <p className="text-gray-600">
+            Please wait while we confirm your order.
+          </p>
         </div>
-      </div>
+      );
+    }
 
-      {/* Additional info for failed payments */}
-      {orderData?.paymentStatus === "FAILED" && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 max-w-md mx-auto">
-          <div className="flex items-start">
-            <AlertCircle className="h-5 w-5 text-yellow-600 mr-2 mt-0.5" />
-            <div className="text-left">
-              <p className="text-yellow-800 text-sm font-medium">
-                What's Next?
-              </p>
-              <p className="text-yellow-700 text-sm mt-1">
-                The shop owner will contact you shortly to discuss alternative
-                payment options or order cancellation.
+    return (
+      <div className="max-w-4xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="text-center space-y-8"
+        >
+          {/* Success Icon and Message */}
+          <div className="space-y-4">
+            <div className="mx-auto w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
+              <Check className="h-10 w-10 text-green-600" />
+            </div>
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900 mb-3">
+                Order Confirmed!
+              </h2>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Thank you for your purchase! Your order has been successfully
+                placed and is being processed.
               </p>
             </div>
           </div>
-        </div>
-      )}
 
-      <div className="space-y-3">
-        <Button
-          onClick={generatePDFReceipt}
-          variant="outline"
-          className="gap-2 bg-transparent"
-        >
-          <Download className="h-4 w-4" />
-          Download Receipt
-        </Button>
+          {/* Order Summary Card */}
+          <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+              <h3 className="text-lg font-semibold text-white text-center">
+                Order Summary
+              </h3>
+            </div>
 
-        <div>
-          <Button
-            onClick={handleOrderComplete}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            Continue Shopping
-          </Button>
-        </div>
+            <div className="p-6 space-y-6">
+              {/* Order Details */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
+                <div className="space-y-3">
+                  <div>
+                    <span className="text-sm font-medium text-gray-500">
+                      Order Number
+                    </span>
+                    <p className="text-lg font-semibold text-gray-900">
+                      {orderData.orderNumber}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-500">
+                      Order Date
+                    </span>
+                    <p className="text-gray-900">
+                      {orderData.orderDate.toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-500">
+                      Payment Method
+                    </span>
+                    <p className="text-gray-900">
+                      {
+                        basePaymentOptions.find(
+                          (p) => p.id === orderData.paymentMethod
+                        )?.name
+                      }
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <span className="text-sm font-medium text-gray-500">
+                      Total Amount
+                    </span>
+                    <p className="text-2xl font-bold text-gray-900">
+                      NPR {orderData.total}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-500">
+                      Payment Status
+                    </span>
+                    <div
+                      className={cn(
+                        "inline-flex items-center px-3 py-1 rounded-full text-sm font-medium",
+                        getStatusColor(orderData.paymentStatus)
+                      )}
+                    >
+                      {orderData.paymentStatus}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Shipping Address */}
+              <div className="border-t pt-6">
+                <h4 className="font-semibold text-gray-900 mb-3">
+                  Shipping Address
+                </h4>
+                <div className="text-left bg-gray-50 rounded-lg p-4">
+                  <p className="font-medium text-gray-900">
+                    {orderData.address.name}
+                  </p>
+                  <p className="text-gray-600">{orderData.address.email}</p>
+                  <p className="text-gray-600">{orderData.address.mobile}</p>
+                  <p className="text-gray-600">{orderData.address.address}</p>
+                  <p className="text-gray-600">
+                    {orderData.address.city}, {orderData.address.country}
+                  </p>
+                </div>
+              </div>
+
+              {/* Order Items */}
+              <div className="border-t pt-6">
+                <h4 className="font-semibold text-gray-900 mb-4">
+                  Order Items ({orderData.items.length})
+                </h4>
+                <div className="space-y-3">
+                  {orderData.items.map((item, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-blue-100 rounded flex items-center justify-center">
+                          <span className="text-sm font-medium text-blue-600">
+                            {item.quantity}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900">
+                            {item.productName}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            NPR {item.price} each
+                          </p>
+                        </div>
+                      </div>
+                      <p className="font-semibold text-gray-900">
+                        NPR {item.totalPrice}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Order Totals */}
+              <div className="border-t pt-6">
+                <div className="space-y-2 max-w-xs ml-auto">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Subtotal:</span>
+                    <span className="font-medium">
+                      NPR {orderData.subtotal}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Delivery Fee:</span>
+                    <span className="font-medium text-green-600">FREE</span>
+                  </div>
+                  <div className="flex justify-between border-t pt-2">
+                    <span className="text-lg font-semibold">Total:</span>
+                    <span className="text-lg font-bold">
+                      NPR {orderData.total}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
+            <Button
+              onClick={generatePDFReceipt}
+              variant="outline"
+              className="gap-2 bg-white border-blue-600 text-blue-600 hover:bg-blue-50"
+              size="lg"
+            >
+              <Download className="h-5 w-5" />
+              Download Receipt
+            </Button>
+
+            <Button
+              onClick={handleOrderComplete}
+              className="bg-blue-600 hover:bg-blue-700 gap-2"
+              size="lg"
+            >
+              <Check className="h-5 w-5" />
+              Continue Shopping
+            </Button>
+          </div>
+
+          {/* Additional Info */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-2xl mx-auto">
+            <div className="flex items-start space-x-3">
+              <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+              <div className="text-left">
+                <p className="text-blue-800 font-medium">What's Next?</p>
+                <p className="text-blue-700 text-sm mt-1">
+                  You will receive an order confirmation email shortly. For any
+                  questions about your order, please contact our customer
+                  support team.
+                </p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">

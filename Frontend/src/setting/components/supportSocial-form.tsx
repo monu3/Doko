@@ -24,9 +24,7 @@ import {
 export function SupportSocialForm() {
   const dispatch = useAppDispatch();
   const { shop } = useAppSelector((state) => state.shop);
-  const { socialAccount, status } = useAppSelector(
-    (state) => state.settings
-  );
+  const { socialAccount, status } = useAppSelector((state) => state.settings);
 
   const [formData, setFormData] = useState({
     supportEmail: "",
@@ -79,9 +77,6 @@ export function SupportSocialForm() {
             setIsInitialized(true);
           })
           .catch(() => {
-            toast.info(
-              "No existing social account found - user will create new one"
-            );
             setFormData({
               supportEmail: "",
               supportPhone: "",
@@ -164,12 +159,12 @@ export function SupportSocialForm() {
     e.preventDefault();
 
     if (!shop?.id) {
-      toast.error("Shop ID is required");
+      toast.error("Shop ID is required", { autoClose: 2000 });
       return;
     }
 
     if (!validateForm()) {
-      toast.error("Please fix validation errors");
+      toast.error("Please fix validation errors", { autoClose: 2000 });
       return;
     }
 
@@ -182,7 +177,9 @@ export function SupportSocialForm() {
             socialAccountData: formData,
           })
         ).unwrap();
-        toast.success("Support & Social settings updated successfully!");
+        toast.success("Support & Social settings updated successfully!", {
+          autoClose: 2000,
+        });
       } else {
         // Create new social account
         await dispatch(
@@ -191,10 +188,14 @@ export function SupportSocialForm() {
             socialAccountData: formData,
           })
         ).unwrap();
-        toast.success("Support & Social settings created successfully!");
+        toast.success("Support & Social settings created successfully!", {
+          autoClose: 2000,
+        });
       }
     } catch (error) {
-      toast.error("Failed to save settings. Please try again.");
+      toast.error("Failed to save settings. Please try again.", {
+        autoClose: 2000,
+      });
     }
   };
 

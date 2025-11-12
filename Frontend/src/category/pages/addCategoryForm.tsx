@@ -8,7 +8,7 @@ import { CategoryInformation } from "../components/addCategory/categoryInformati
 import { CategoryBanner } from "../components/addCategory/categoryBanner";
 import { CategoryContent } from "../components/addCategory/categoryContent";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 
 import {
   AlertDialog,
@@ -65,7 +65,7 @@ export default function AddCategoryPage() {
 
   const handleSubmit = useCallback(async () => {
     if (!formData.name?.trim()) {
-      toast.error("Please fill in all required fields");
+      toast.error("Please fill in all required fields", { autoClose: 2000 });
       setCurrentSection("information");
       return;
     }
@@ -75,11 +75,13 @@ export default function AddCategoryPage() {
 
       await addCategory(formData as Omit<Category, "id" | "shopId">).unwrap();
 
-      toast.success("Category created successfully");
+      toast.success("Category created successfully", { autoClose: 2000 });
       navigate("/products/categories");
     } catch (error: any) {
       console.error("Category creation error:", error);
-      toast.error(error.message || "Failed to create category");
+      toast.error(error.message || "Failed to create category", {
+        autoClose: 2000,
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -115,7 +117,10 @@ export default function AddCategoryPage() {
               <HelpCircle className="h-4 w-4" />
             </Button>
           </div>
-          <Button onClick={handleSubmit} disabled={isSubmitting || !hasUnsavedChanges}>
+          <Button
+            onClick={handleSubmit}
+            disabled={isSubmitting || !hasUnsavedChanges}
+          >
             {isSubmitting ? "Adding category..." : "Add category"}
           </Button>
         </div>
