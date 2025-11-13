@@ -37,7 +37,7 @@ export default function Followe() {
     <Card className="w-32 inline-flex items-center space-x-3 px-2 py-1 bg-blue-400 text-primary-foreground">
       <CardContent className="flex items-center p-0">
         <Users className="h-6 w-3 mr-1" />
-        <span className="text-xs font-medium">Followers: </span>
+        <span className="text-xs font-medium">Followers123: </span>
         {isLoading ? (
           <Loader2 className="h-3 w-3 animate-spin ml-1" />
         ) : (
