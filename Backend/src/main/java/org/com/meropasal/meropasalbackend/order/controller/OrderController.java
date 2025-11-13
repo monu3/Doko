@@ -58,6 +58,7 @@ public class OrderController {
     }
 
     // 2. Get all orders of the customer
+    //this is for the testing
     @GetMapping
     public ResponseEntity<?> getCustomerOrders(@RequestHeader("Authorization") String authHeader) {
         try {
