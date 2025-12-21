@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   # --- 1️⃣ PostgreSQL Database ---
-  postgres:
+  doko-DB:
     image: postgres:16
     container_name: doko-DB
     restart: always
@@ -18,7 +18,7 @@ services:
       - doko-network
 
   # --- 2️⃣ Spring Boot Backend ---
-  backend:
+  doko-backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -33,7 +33,7 @@ services:
       - doko-network
 
   # --- 3️⃣ React Frontend (Nginx) ---
-  frontend:
+  doko-frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
