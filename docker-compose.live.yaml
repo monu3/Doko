@@ -17,13 +17,12 @@ services:
 
   # --- 2️⃣ Spring Boot Backend ---
   doko-backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: monusiddiki/doko-backend:latest
     container_name: doko-backend
     depends_on:
       - doko-DB
     env_file:
+      - SPRING_PROFILES_ACTIVE=monu
       - .env
     ports:
       - "${BACKEND_PORT}:8080"
@@ -32,9 +31,7 @@ services:
 
   # --- 3️⃣ React Frontend (Nginx) ---
   doko-frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+    image: monusiddiki/doko-frontend:latest
     container_name: doko-frontend
     depends_on:
       - doko-backend
