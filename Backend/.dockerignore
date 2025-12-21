@@ -27,8 +27,6 @@ node_modules/
 # ------------------------------
 # Environment and config files
 # ------------------------------
-.env
-*.env
 *.properties.local
 *.yml.local
 *.yaml.local
