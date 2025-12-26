@@ -22,7 +22,6 @@ services:
     depends_on:
       - doko-DB
     env_file:
-      - SPRING_PROFILES_ACTIVE=monu
       - .env
     ports:
       - "${BACKEND_PORT}:8080"

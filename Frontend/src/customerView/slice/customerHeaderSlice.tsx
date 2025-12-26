@@ -8,7 +8,7 @@ import axios from "axios";
 import { clearCart } from "./cartSlice";
 import { clearWishlist } from "./wishlistSlice";
 
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || "http://localhost:8080";
 
 // Types
 export interface CustomerUser {
